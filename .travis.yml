@@ -9,4 +9,7 @@ jobs:
   allow_failures:
     - rust: nightly
   fast_finish: true
-os: osx
+os:
+ - osx
+ - linux
+ - windows
