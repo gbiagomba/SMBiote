@@ -1,7 +1,7 @@
 /* 
 Author: Gilles Biagomba
 Program: smb-ryper.rs
-Description: This program was designed to scxan a network for SMB, NBT, LLMNR and MSRCP
+Description: This program was designed to scan a network for SMB, NBT, LLMNR and MSRCP
 */
 
 use clap::{Arg, App};
