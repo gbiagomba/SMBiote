@@ -4,75 +4,63 @@ Program: smb-ryper.rs
 Description: This program was designed to scan a network for SMB, NBT, LLMNR and MSRCP
 */
 
-use clap::{Arg, App};
 use std::env;
-use std::fs;
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
 
-fn main() 
-{
-   let matches = App::new("SMB Ryper")
-        .version("0.1.0")
-        .author("madhattr")
-        .about("Scanning SMB, NBT, LLMNR, and MS-RPC")
-        .arg(Arg::with_name("file")
-                 .short("f")
-                 .long("file")
-                 .takes_value(true)
-                 .help("target file"))
-        .arg(Arg::with_name("mode")
-                 .short("m")
-                 .long("mode")
-                 .takes_value(true)
-                 .help("Modes: Recon, Intrusion, Exploit"))
-         .arg(Arg::with_name("username")
-                 .short("u")
-                 .long("username")
-                 .takes_value(true)
-                 .help("Username you want to use"))
-         .arg(Arg::with_name("User list")
-                 .short("U")
-                 .long("user-list")
-                 .takes_value(true)
-                 .help("File with a list of usernames"))
-         .arg(Arg::with_name("password")
-                 .short("p")
-                 .long("password")
-                 .takes_value(true)
-                 .help("Password you want to use"))
-         .arg(Arg::with_name("Pass List")
-                 .short("P")
-                 .long("pass-list")
-                 .takes_value(true)
-                 .help("File with a list of passwords"))
-        .get_matches();
+use smbover::{SMBScanner, Auth};
 
-   // Setting targets var
-    let targets = fs::read_to_string(filename)
-    .expect("Something went wrong reading the file");
+fn main() {
+    let args: Vec<String> = env::args().collect();
 
-    // setting user list
-    let userList = fs::read_to_string(filename)
-    .expect("Something went wrong reading the file");
-
-   // setting password list
-    let passList = fs::read_to_string(filename)
-    .expect("Something went wrong reading the file");
-
-    let num_str = matches.value_of("num");
-    match num_str 
-    {
-        None => println!("No idea what your favorite number is."),
-        Some(s) => 
-        {
-            match s.parse::<i32>() 
-            {
-                Ok(n) => println!("Your favorite number must be {}.", n + 5),
-                Err(_) => println!("That's not a number! {}", s),
-            }
-        }
+    if args.len() < 4 {
+        println!("Usage: {} <host> <username> <password>", args[0]);
+        println!("       {} -f <file> <username> <password>", args[0]);
+        std::process::exit(1);
     }
 
-   let fees = 25_000;
-   let salary:f64 = 35_000.00;
-   println!("fees is {} and salary is {}",fees,salary);
+    let username = &args[args.len() - 2];
+    let password = &args[args.len() - 1];
+
+    if args[1] == "-f" {
+        if args.len() != 5 {
+            println!("Usage: {} -f <file> <username> <password>", args[0]);
+            std::process::exit(1);
+        }
+        let file_path = &args[2];
+        scan_from_file(file_path, username, password);
+    } else {
+        let host = &args[1];
+        scan_single_host(host, username, password);
+    }
+}
+
+fn scan_single_host(host: &str, username: &str, password: &str) {
+    let scanner = SMBScanner::new();
+    let auth = Auth::new(username.to_string(), password.to_string());
+    
+    match scanner.scan_host(host, &auth) {
+        Ok(shares) => {
+            println!("Shares on {}: {:?}", host, shares);
+        }
+        Err(err) => {
+            eprintln!("Error scanning {}: {}", host, err);
+        }
+    }
+}
+
+fn scan_from_file(file_path: &str, username: &str, password: &str) {
+    if let Ok(file) = File::open(file_path) {
+        let scanner = SMBScanner::new();
+        let auth = Auth::new(username.to_string(), password.to_string());
+
+        for line in io::BufReader::new(file).lines() {
+            if let Ok(host) = line {
+                scan_single_host(&host, username, password);
+            }
+        }
+    } else {
+        eprintln!("Error opening file: {}", file_path);
+    }
 }
