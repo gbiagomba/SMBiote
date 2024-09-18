@@ -1,4 +1,4 @@
-![alt tag](img/Firefly Design a dark, gritty logo for 'SMBiote' with a villainous, comic book feel. Draw inspiratio (1).jpg)
+![alt tag](img/Firefly%20Design%20a%20dark,%20gritty%20logo%20for%20'SMBiote'%20with%20a%20villainous,%20comic%20book%20feel.%20Draw%20inspiratio%20(1).jpg)
 
 # SMBiote
 SMBiote is a Rust-based SMB scanning tool that allows you to access and interact with SMB shares on remote hosts. It supports null session logins, lists available shares, spiders shares, and downloads their contents. You can supply a single host or a list of hosts from a file.
